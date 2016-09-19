@@ -106,7 +106,8 @@ public class PermissionManager {
     }
 
     /**
-     * 得到权限句柄
+     * 获得权限操作句柄  句柄和Activity 一一对应，不可更改
+     *
      * @param activity
      * @return
      */
@@ -120,7 +121,8 @@ public class PermissionManager {
     }
 
     /**
-     * 得到权限句柄
+     * 获得权限操作句柄
+     *
      * @param fragment
      * @return
      */
@@ -134,18 +136,10 @@ public class PermissionManager {
         return permissionHandler;
     }
 
-    /**
-     * 移除句柄
-     * @param activity
-     */
     public void unregisterPermissionHandler(Activity activity) {
         handlerList.remove(activity);
     }
 
-    /**
-     * 移除句柄
-     * @param fragment
-     */
     public void unregisterPermissionHandler(Fragment fragment) {
         handlerList.remove(fragment);
     }

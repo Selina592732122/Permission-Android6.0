@@ -26,11 +26,20 @@ public abstract class PermissionHandler<Target> {
     protected List<String> unAssignPermissionList = new ArrayList<>();
     protected List<String> permissionRationale = new ArrayList<>();
 
-
+    /**
+     * @param activity
+     * @return
+     * @see PermissionManager#getPermissionHandler(Activity)
+     */
     static PermissionHandler build(Activity activity) {
         return new ActivityPermissionHandler(activity);
     }
 
+    /**
+     * @param fragment
+     * @return
+     * @see PermissionManager#getPermissionHandler(Fragment)
+     */
     static PermissionHandler build(Fragment fragment) {
         return new FragmentPermissionHandler(fragment);
     }
@@ -65,10 +74,28 @@ public abstract class PermissionHandler<Target> {
 
     public abstract void unbind();
 
+    /**
+     * 单权限请求
+     *
+     * @param permission 权限名字
+     * @param permissionAction  动作回调
+     */
     public abstract void requestPermission(@NonNull String permission, PermissionAction permissionAction);
 
+    /**
+     * 多权限申请
+     *
+     * @param permissionAction 动作回调
+     * @param permissions      权限列表
+     */
     public abstract void requestPermission(PermissionAction permissionAction, @NonNull String[] permissions);
 
+
+    /**
+     * @param permission
+     * @return 是否显示带 “Not ask again”选择框的权限申请对话框
+     * @see Fragment#shouldShowRequestPermissionRationale(String)
+     */
     public abstract boolean shouldShowRequestPermissionRationale(@NonNull String permission);
 
     private Context getContext(Target target) {
@@ -84,6 +111,13 @@ public abstract class PermissionHandler<Target> {
     protected void requestBeforeAction(Target target, PermissionAction permissionAction, @NonNull String[] permissions) {
         this.permissionAction = permissionAction;
         Context context = getContext(target);
+        /**
+         * fragment 里面getContext 有可能返回为null
+         */
+
+        if (context == null) {
+            return;
+        }
 
         for (String permission : permissions) {
             if (!PermissionManager.checkPermission(context, permission)) {
@@ -92,7 +126,7 @@ public abstract class PermissionHandler<Target> {
                 permissionAction.onResult(permission, IPermissionAction.PERMISSION_GRANTED);
             }
         }
-        //TODO onRationaleListener解决重复设置问题
+
         if (onRationaleListener != null) {
             for (String permission : permissions) {
                 permissionRationale.add(permission);
@@ -121,6 +155,9 @@ public abstract class PermissionHandler<Target> {
             }
         }
 
+        /**
+         * 筛选不再提醒的权限
+         */
         if (onRationaleListener != null) {
             Iterator<String> it = permissionRationale.iterator();
 
@@ -138,15 +175,14 @@ public abstract class PermissionHandler<Target> {
             }
 
         }
+        /**reset list*/
         permissionRationale.clear();
         unAssignPermissionList.clear();
 
 
     }
 
-    /**
-     * Activity的权限请求 同步方法不能抽象，只能自行添加。(抽象方法 不能为同步或者静态方法，实现的方法可以为同步，但是不能静态)
-     */
+
     private static class ActivityPermissionHandler extends PermissionHandler<Activity> {
         private Activity activity;
 
@@ -160,12 +196,7 @@ public abstract class PermissionHandler<Target> {
             requestPermission(permissionAction, permissions);
         }
 
-        /**
-         * activity多权限申请
-         *
-         * @param permissionAction 结果回调
-         * @param permissions      权限列表
-         */
+
         @Override
         public synchronized void requestPermission(PermissionAction permissionAction, @NonNull String[] permissions) {
             requestBeforeAction(activity, permissionAction, permissions);
@@ -175,11 +206,7 @@ public abstract class PermissionHandler<Target> {
             ActivityCompat.requestPermissions(activity, unAssignPermissionList.toArray(new String[unAssignPermissionList.size()]), BASE_REQUEST_PERMISSION_CODE);
         }
 
-        /**
-         * @param permission
-         * @return 是否显示带有never ask again 选择框
-         * @see ActivityCompat#shouldShowRequestPermissionRationale(Activity, String)
-         */
+
         @Override
         public synchronized boolean shouldShowRequestPermissionRationale(@NonNull String permission) {
             return ActivityCompat.shouldShowRequestPermissionRationale(activity, permission);
@@ -225,11 +252,7 @@ public abstract class PermissionHandler<Target> {
             fragment.requestPermissions(unAssignPermissionList.toArray(new String[unAssignPermissionList.size()]), BASE_REQUEST_PERMISSION_CODE);
         }
 
-        /**
-         * @param permission
-         * @return false 不再显示
-         * @see Fragment#shouldShowRequestPermissionRationale(String)
-         */
+
         @Override
         public synchronized boolean shouldShowRequestPermissionRationale(@NonNull String permission) {
             return fragment.shouldShowRequestPermissionRationale(permission);
