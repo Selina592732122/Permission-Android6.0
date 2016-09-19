@@ -1,6 +1,5 @@
-package com.luyin.permission60.util;
+package com.luyin.permission60.permission;
 
-import android.content.pm.PackageManager;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
@@ -10,15 +9,14 @@ import android.support.annotation.NonNull;
  * Created Time:2016/8/22 14:02
  * Email：rainyeveningstreet@gmail.com
  */
-public abstract class PermissionHandler implements PermissionAction {
+public abstract class PermissionAction implements IPermissionAction {
     private Looper mLooper = Looper.getMainLooper();
 
     public synchronized final void onResult(@NonNull String permission, int grantResult) {
-        if(grantResult== PackageManager.PERMISSION_GRANTED){
+        if (grantResult == PERMISSION_GRANTED) {
             onGrated(permission);
-        }else if(grantResult== PackageManager.PERMISSION_DENIED){
+        } else if (grantResult == PERMISSION_DENIED) {
             onDenied(permission);
         }
-
     }
 }
