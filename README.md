@@ -3,11 +3,11 @@
 目前在Android 6.0  使用成功
 
 ##类的联系
-你只能通过PermissionManager得到操作句柄，PermissionManager 是一个单例模型。
+你只能通过PermissionManager得到操作句柄，PermissionManager 是一个单例模型。<p/>
 PermissionHandler和你绑定的类（Acticity,Fragment）是一一对应的,不可另外得到PermissionHandler。
 
 ##使用方式：
-以Activity为例：
+以Activity为例：<p/>
 1、得到权限控制句柄
 ```
  permissionHandler = PermissionManager.getInstance().getPermissionHandler(this);
