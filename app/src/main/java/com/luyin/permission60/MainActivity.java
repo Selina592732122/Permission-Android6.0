@@ -27,7 +27,7 @@ public class MainActivity extends BaseActivity implements PermissionResultCallBa
     }
 
     public void requestPermission(View v) {
-        permissionHandler.requestPermission(Manifest.permission.CALL_PHONE, Manifest.permission.CAMERA);
+        permissionHandler.requestPermission(3,Manifest.permission.CALL_PHONE, Manifest.permission.CAMERA);
     }
 
     @Override

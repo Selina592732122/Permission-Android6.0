@@ -2,7 +2,9 @@ package com.luyin.permission60.permission;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 
@@ -11,7 +13,6 @@ import java.util.List;
 
 /**
  * Description:
- * @link https://github.com/k0shk0sh/PermissionHelper
  * Author：洪培林
  * Created Time:2016/9/18 22:57
  * Email：rainyeveningstreet@gmail.com
@@ -47,23 +48,20 @@ public abstract class PermissionHandler<Target> {
     /**
      * Android M之前的申请权限行为
      *
-     * @param activity    当前activity
+     * @param context
      * @param permissions 权限列表
      */
-    @Deprecated
-    private void doPermissionWorkBeforeAndroidM(@NonNull Activity activity,
-                                                @NonNull String[] permissions) {
-//        for (String perm : permissions) {
-//            if (permissionAction != null) {
-//                if (ActivityCompat.checkSelfPermission(activity, perm)
-//                        != PackageManager.PERMISSION_GRANTED) {
-//
-//                    permissionAction.onResult(perm, PackageManager.PERMISSION_DENIED);
-//                } else {
-//                    permissionAction.onResult(perm, PackageManager.PERMISSION_GRANTED);
-//                }
-//            }
-//        }
+    void requestPermissionWorkBeforeAndroidM(int requestCode, @NonNull Context context, @NonNull String[] permissions) {
+        for (String permission : permissions) {
+            if (PermissionHelper.checkPermission(context, permission)) {
+                permissionList.add(new ActivityPermission(permission, PermissionResultCallBack.PERMISSION_GRANTED));
+            } else {
+                permissionList.add(new ActivityPermission(permission, PermissionResultCallBack.PERMISSION_DENIED));
+            }
+        }
+
+        notifyPermissionResultCallBack();
+        permissionList.clear();
     }
 
     public abstract boolean bind(Target target);
@@ -86,18 +84,8 @@ public abstract class PermissionHandler<Target> {
      */
     public abstract boolean shouldShowRequestPermissionRationale(@NonNull String permission);
 
-    private Context getContext(Target target) {
-        Context context = null;
-        if (target instanceof Activity) {
-            context = (Context) target;
-        } else if (target instanceof Fragment) {
-            context = ((Fragment) target).getContext();
-        }
-        return context;
-    }
 
-    void filterPermission(Target target, @NonNull String[] permissions) {
-        Context context = getContext(target);
+    void filterPermission(@Nullable Context context, @NonNull String[] permissions) {
         /**
          * fragment 里面getContext 有可能返回为null
          */
@@ -135,10 +123,25 @@ public abstract class PermissionHandler<Target> {
      * @param grantResult    notifyPermissionChange的grantResult
      * @return
      */
-    boolean
-    isDeniedForever(String permissionName, int grantResult) {
+    boolean isDeniedForever(String permissionName, int grantResult) {
         return grantResult == PermissionResultCallBack.PERMISSION_DENIED && !shouldShowRequestPermissionRationale(permissionName);
 
+    }
+
+    /**
+     * 通知回调
+     */
+    private void notifyPermissionResultCallBack() {
+        if (permissionResultCallBack != null) {
+            String[] permissionNameArray = new String[permissionList.size()];
+            int[] grantResultArray = new int[permissionList.size()];
+
+            for (int i = 0; i < permissionList.size(); i++) {
+                permissionNameArray[i] = permissionList.get(i).getPermissionName();
+                grantResultArray[i] = permissionList.get(i).getGrantResult();
+            }
+            permissionResultCallBack.onPermissionResult(this.requestCode, permissionNameArray, grantResultArray);
+        }
     }
 
     /**
@@ -168,20 +171,11 @@ public abstract class PermissionHandler<Target> {
             }
         }
 
-        if (permissionResultCallBack != null) {
-            String[] permissionNameArray = new String[permissionList.size()];
-            int[] grantResultArray = new int[permissionList.size()];
+        notifyPermissionResultCallBack();
 
-            for (int i = 0; i < permissionList.size(); i++) {
-                permissionNameArray[i] = permissionList.get(i).getPermissionName();
-                grantResultArray[i] = permissionList.get(i).getGrantResult();
-            }
-            permissionResultCallBack.onPermissionResult(this.requestCode, permissionNameArray, grantResultArray);
-        }
         /**reset list*/
         permissionList.clear();
     }
-
 
     private static class ActivityPermissionHandler extends PermissionHandler<Activity> {
         private Activity activity;
@@ -203,17 +197,26 @@ public abstract class PermissionHandler<Target> {
 
         /**
          * 带请求码的权限申请
+         *
          * @param requestCode
          * @param permissions
          */
         @Override
         public void requestPermission(int requestCode, @NonNull String... permissions) {
+            this.requestCode = requestCode;
+
+            if (Build.VERSION.SDK_INT < 23) {
+                requestPermissionWorkBeforeAndroidM(this.requestCode, activity, permissions);
+                return;
+            }
+
             filterPermission(activity, permissions);
             String[] requestPermissionArray = getRequestPermissionArray();
             if (requestPermissionArray == null) {
                 return;
             }
-            this.requestCode = requestCode;
+
+
             ActivityCompat.requestPermissions(activity, requestPermissionArray, this.requestCode);
         }
 
@@ -262,7 +265,13 @@ public abstract class PermissionHandler<Target> {
 
         @Override
         public void requestPermission(int requestCode, @NonNull String... permissions) {
-            filterPermission(fragment, permissions);
+            this.requestCode = requestCode;
+            if (Build.VERSION.SDK_INT < 23) {
+                requestPermissionWorkBeforeAndroidM(this.requestCode, fragment.getContext(), permissions);
+                return;
+            }
+
+            filterPermission(fragment.getContext(), permissions);
             String[] requestPermissionArray = getRequestPermissionArray();
             if (requestPermissionArray == null) {
                 return;

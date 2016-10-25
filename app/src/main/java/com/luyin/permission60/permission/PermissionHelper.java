@@ -134,22 +134,5 @@ public class PermissionHelper {
     public void unregisterPermissionHandler(Fragment fragment) {
         handlerList.remove(fragment);
     }
-//    /**
-//     * Activity 权限操作
-//     *
-//     * @param activity
-//     * @return
-//     */
-    //  @SuppressWarnings("unchecked")
-//    private PermissionHandler createPermissionHandler(Activity activity) {
-//        PermissionHandler permissionHandler=handlerList.get(activity);
-//        if (permissionHandler == null) {
-//            permissionHandler = PermissionHandler.build(activity);
-//        } else {
-//            permissionHandler.bind(activity);
-//        }
-//        return permissionHandler;
-//    }
-
 
 }
