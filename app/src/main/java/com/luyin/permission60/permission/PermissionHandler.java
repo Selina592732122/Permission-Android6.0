@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Description:
  * Author：洪培林
  * Created Time:2016/9/18 22:57
  * Email：rainyeveningstreet@gmail.com
@@ -59,8 +58,9 @@ public abstract class PermissionHandler<Target> {
                 permissionList.add(new ActivityPermission(permission, PermissionResultCallBack.PERMISSION_DENIED));
             }
         }
-
+        this.requestCode = requestCode;
         notifyPermissionResultCallBack();
+
         permissionList.clear();
     }
 
@@ -140,7 +140,7 @@ public abstract class PermissionHandler<Target> {
                 permissionNameArray[i] = permissionList.get(i).getPermissionName();
                 grantResultArray[i] = permissionList.get(i).getGrantResult();
             }
-            permissionResultCallBack.onPermissionResult(this.requestCode, permissionNameArray, grantResultArray);
+            permissionResultCallBack.onPermissionResult(requestCode, permissionNameArray, grantResultArray);
         }
     }
 
@@ -203,10 +203,8 @@ public abstract class PermissionHandler<Target> {
          */
         @Override
         public void requestPermission(int requestCode, @NonNull String... permissions) {
-            this.requestCode = requestCode;
-
             if (Build.VERSION.SDK_INT < 23) {
-                requestPermissionWorkBeforeAndroidM(this.requestCode, activity, permissions);
+                requestPermissionWorkBeforeAndroidM(requestCode, activity, permissions);
                 return;
             }
 
@@ -216,7 +214,7 @@ public abstract class PermissionHandler<Target> {
                 return;
             }
 
-
+            this.requestCode = requestCode;
             ActivityCompat.requestPermissions(activity, requestPermissionArray, this.requestCode);
         }
 
@@ -265,9 +263,9 @@ public abstract class PermissionHandler<Target> {
 
         @Override
         public void requestPermission(int requestCode, @NonNull String... permissions) {
-            this.requestCode = requestCode;
+
             if (Build.VERSION.SDK_INT < 23) {
-                requestPermissionWorkBeforeAndroidM(this.requestCode, fragment.getContext(), permissions);
+                requestPermissionWorkBeforeAndroidM(requestCode, fragment.getContext(), permissions);
                 return;
             }
 
