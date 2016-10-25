@@ -11,18 +11,6 @@ import java.util.List;
 
 /**
  * Description:
- * * android 6.0的权限管理 做出了以下几个动作测试
- * （字段识别： R1 为第一次请求权限   R2为第二次请求权限  G（Grant） 通过 D(Deny) 拒绝  NA（not ask ）不再询问）
- * R1 G（程序永久得到权限） --->(代码再次请求)  action1: G(程序得到权限)  action2: D（程序取消权限）
- * R1 D --->R2 G(程序永久得到权限)  --->(代码再次请求) 回到R1  action1: G（得到权限） D（重启App 拒绝权限）
- * R1 D --->R2 D NA  --->(代码再次请求)无界面
- * 因此，
- * 1、只要用户允许了，程序就能得到权限了。无需重复申请
- * 2、如果用户NA且拒绝 ，那么需要弹出对话框引导用户去申请权限。
- * 注意：代码设计时候，一定要保证不能重复申请权限，否则使用shouldShowRequestPermissionRationale 会出现奇怪问题，程序设计失败。
- * <p>
- * 权限设计：友好的设计--->告知申请权限有什么作用 页面---->系统自带的对话框------> 永久拒绝（弹出引导对话框）
- *
  * @link https://github.com/k0shk0sh/PermissionHelper
  * Author：洪培林
  * Created Time:2016/9/18 22:57
