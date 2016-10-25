@@ -21,19 +21,19 @@ import java.util.Map;
  * Created Time:2016/8/20 00:54
  * Email：rainyeveningstreet@gmail.com
  */
-public class PermissionManager {
+public class PermissionHelper {
     private static final String TAG = "PermissionManager";
-    private static PermissionManager mInstance = null;
+    private static PermissionHelper mInstance = null;
     private final Map<Object, PermissionHandler> handlerList = new HashMap<>();
 
-    public static PermissionManager getInstance() {
+    public static PermissionHelper getInstance() {
         if (mInstance == null) {
-            mInstance = new PermissionManager();
+            mInstance = new PermissionHelper();
         }
         return mInstance;
     }
 
-    private PermissionManager() {
+    private PermissionHelper() {
 
     }
 
@@ -65,39 +65,30 @@ public class PermissionManager {
         return list.toArray(new String[list.size()]);
     }
 
-    /**
-     * 检查是否有权限
-     *
-     * @param context
-     * @param permission
-     * @return
-     */
-    public static synchronized boolean checkPermission(@Nullable Context context, String permission) {
-        return checkPermissionList(context, new String[]{permission});
-    }
+
 
     /**
      * 检查是否有权限
      *
      * @param context    上下文
-     * @param permission 权限列表
+     * @param permissions 权限列表
      * @return
      */
-    public static synchronized boolean checkPermissionList(@Nullable Context context,
-                                                           String[] permission) {
+    public static synchronized boolean checkPermission(@Nullable Context context,
+                                                           String... permissions) {
         if (context == null) {
             return false;
         }
 
         boolean hasPermissions = true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (String perm : permission) {
+            for (String perm : permissions) {
                 hasPermissions &= PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, perm);
             }
 
         } else {
             PackageManager packageManager = context.getPackageManager();
-            for (String perm : permission) {
+            for (String perm : permissions) {
                 hasPermissions &= PackageManager.PERMISSION_GRANTED == packageManager.checkPermission(perm, context.getPackageName());
             }
         }
