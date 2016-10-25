@@ -182,9 +182,7 @@ public abstract class PermissionHandler<Target> {
         permissionList.clear();
     }
 
-    /**
-     * Activity的权限请求 同步方法不能抽象，只能自行添加。(抽象方法 不能为同步或者静态方法，实现的方法可以为同步，但是不能静态)
-     */
+
     private static class ActivityPermissionHandler extends PermissionHandler<Activity> {
         private Activity activity;
 
