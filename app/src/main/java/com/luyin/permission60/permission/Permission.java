@@ -5,11 +5,11 @@ package com.luyin.permission60.permission;
  * Author：洪培林
  * Created Time:2016/10/24 14:38
  */
-public class ActivityPermission {
+public class Permission {
     private int grantResult;
     private String permissionName;
 
-    public ActivityPermission(String permissionName, int grantResult) {
+    public Permission(String permissionName, int grantResult) {
         this.grantResult = grantResult;
         this.permissionName = permissionName;
     }

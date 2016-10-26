@@ -22,5 +22,5 @@ public interface PermissionResultCallBack {
      */
     int PERMISSION_DENIED_FOREVER = 111;
 
-    void onPermissionResult(int requestCode, String[] permissions, int[] grantResults);
+    void onRequestPermissionNewResult(int requestCode, String[] permissions, int[] grantResults);
 }

@@ -24,7 +24,7 @@ import java.util.Map;
 public class PermissionHelper {
     private static final String TAG = "PermissionManager";
     private static PermissionHelper mInstance = null;
-    private final Map<Object, PermissionHandler> handlerList = new HashMap<>();
+    private final Map<String, PermissionHandler> handlerList = new HashMap<>();
 
     public static PermissionHelper getInstance() {
         if (mInstance == null) {
@@ -66,16 +66,15 @@ public class PermissionHelper {
     }
 
 
-
     /**
      * 检查是否有权限
      *
-     * @param context    上下文
+     * @param context     上下文
      * @param permissions 权限列表
      * @return
      */
     public static synchronized boolean checkPermission(@Nullable Context context,
-                                                           String... permissions) {
+                                                       String... permissions) {
         if (context == null) {
             return false;
         }
@@ -103,10 +102,11 @@ public class PermissionHelper {
      * @return
      */
     public PermissionHandler getPermissionHandler(Activity activity) {
-        PermissionHandler permissionHandler = handlerList.get(activity);
+        String activityName = activity.getClass().getName();
+        PermissionHandler permissionHandler = handlerList.get(activityName);
         if (permissionHandler == null) {
             permissionHandler = PermissionHandler.build(activity);
-            handlerList.put(activity, permissionHandler);
+            handlerList.put(activityName, permissionHandler);
         }
         return permissionHandler;
     }
@@ -118,21 +118,22 @@ public class PermissionHelper {
      * @return
      */
     public PermissionHandler getPermissionHandler(Fragment fragment) {
-        PermissionHandler permissionHandler = handlerList.get(fragment);
+        String fragmentName = fragment.getClass().getName();
+        PermissionHandler permissionHandler = handlerList.get(fragmentName);
 
         if (permissionHandler == null) {
             permissionHandler = PermissionHandler.build(fragment);
-            handlerList.put(fragment, permissionHandler);
+            handlerList.put(fragmentName, permissionHandler);
         }
         return permissionHandler;
     }
 
     public void unregisterPermissionHandler(Activity activity) {
-        handlerList.remove(activity);
+        handlerList.remove(activity.getClass().getName());
     }
 
     public void unregisterPermissionHandler(Fragment fragment) {
-        handlerList.remove(fragment);
+        handlerList.remove(fragment.getClass().getName());
     }
 
 }

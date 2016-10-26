@@ -17,8 +17,9 @@ import java.util.List;
  * Email：rainyeveningstreet@gmail.com
  */
 public abstract class PermissionHandler<Target> {
+    private static final String TAG = "PermissionHandler";
     public static final int COMMON_REQUEST_PERMISSION_CODE = 1;
-    private List<ActivityPermission> permissionList = new ArrayList<>();
+    private List<Permission> permissionList = new ArrayList<>();
     private PermissionResultCallBack permissionResultCallBack;
     protected int requestCode;
 
@@ -32,7 +33,7 @@ public abstract class PermissionHandler<Target> {
      * @see PermissionHelper#getPermissionHandler(Activity)
      */
     static PermissionHandler build(Activity activity) {
-        return new ActivityPermissionHandler(activity);
+        return new ActivityPermissionHandler().bind(activity);
     }
 
     /**
@@ -41,7 +42,7 @@ public abstract class PermissionHandler<Target> {
      * @see PermissionHelper#getPermissionHandler(Fragment)
      */
     static PermissionHandler build(Fragment fragment) {
-        return new FragmentPermissionHandler(fragment);
+        return new FragmentPermissionHandler().bind(fragment);
     }
 
     /**
@@ -53,9 +54,9 @@ public abstract class PermissionHandler<Target> {
     void requestPermissionWorkBeforeAndroidM(int requestCode, @NonNull Context context, @NonNull String[] permissions) {
         for (String permission : permissions) {
             if (PermissionHelper.checkPermission(context, permission)) {
-                permissionList.add(new ActivityPermission(permission, PermissionResultCallBack.PERMISSION_GRANTED));
+                permissionList.add(new Permission(permission, PermissionResultCallBack.PERMISSION_GRANTED));
             } else {
-                permissionList.add(new ActivityPermission(permission, PermissionResultCallBack.PERMISSION_DENIED));
+                permissionList.add(new Permission(permission, PermissionResultCallBack.PERMISSION_DENIED));
             }
         }
         this.requestCode = requestCode;
@@ -64,7 +65,7 @@ public abstract class PermissionHandler<Target> {
         permissionList.clear();
     }
 
-    public abstract boolean bind(Target target);
+    public abstract PermissionHandler bind(@NonNull Target target);
 
     public abstract void unbind();
 
@@ -78,6 +79,8 @@ public abstract class PermissionHandler<Target> {
     public abstract void requestPermission(int requestCode, @NonNull String... permissions);
 
     /**
+     * 小米手机始终为false
+     *
      * @param permission
      * @return 是否显示带 “Not ask again”选择框的权限申请对话框
      * @see Fragment#shouldShowRequestPermissionRationale(String)
@@ -94,9 +97,9 @@ public abstract class PermissionHandler<Target> {
         }
         for (String permission : permissions) {
             if (PermissionHelper.checkPermission(context, permission)) {
-                permissionList.add(new ActivityPermission(permission, PermissionResultCallBack.PERMISSION_GRANTED));
+                permissionList.add(new Permission(permission, PermissionResultCallBack.PERMISSION_GRANTED));
             } else {
-                permissionList.add(new ActivityPermission(permission, PermissionResultCallBack.PERMISSION_UNDEFINED));
+                permissionList.add(new Permission(permission, PermissionResultCallBack.PERMISSION_UNDEFINED));
             }
         }
 
@@ -104,7 +107,7 @@ public abstract class PermissionHandler<Target> {
 
     String[] getRequestPermissionArray() {
         List<String> requestPermission = new ArrayList<>();
-        for (ActivityPermission permission : permissionList) {
+        for (Permission permission : permissionList) {
             if (permission.getGrantResult() == PermissionResultCallBack.PERMISSION_UNDEFINED) {
                 requestPermission.add(permission.getPermissionName());
 
@@ -140,7 +143,7 @@ public abstract class PermissionHandler<Target> {
                 permissionNameArray[i] = permissionList.get(i).getPermissionName();
                 grantResultArray[i] = permissionList.get(i).getGrantResult();
             }
-            permissionResultCallBack.onPermissionResult(requestCode, permissionNameArray, grantResultArray);
+            permissionResultCallBack.onRequestPermissionNewResult(requestCode, permissionNameArray, grantResultArray);
         }
     }
 
@@ -154,12 +157,12 @@ public abstract class PermissionHandler<Target> {
     public void
     notifyPermissionChange(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
-        if (permissions.length == 0 && requestCode != this.requestCode) {
+        if (permissions.length == 0 || requestCode != this.requestCode) {
             return;
         }
 
         for (int resultPermissionIndex = 0; resultPermissionIndex < permissions.length; resultPermissionIndex++) {
-            for (ActivityPermission permission : permissionList) {
+            for (Permission permission : permissionList) {
                 if (permission.equals(permissions[resultPermissionIndex])) {
                     if (isDeniedForever(permissions[resultPermissionIndex], grantResults[resultPermissionIndex])) {
                         permission.setGrantResult(PermissionResultCallBack.PERMISSION_DENIED_FOREVER);
@@ -180,8 +183,8 @@ public abstract class PermissionHandler<Target> {
     private static class ActivityPermissionHandler extends PermissionHandler<Activity> {
         private Activity activity;
 
-        public ActivityPermissionHandler(Activity activity) {
-            this.activity = activity;
+        private ActivityPermissionHandler() {
+
         }
 
         /**
@@ -229,13 +232,12 @@ public abstract class PermissionHandler<Target> {
         }
 
         @Override
-        public boolean bind(Activity activity) {
-            if (this.activity == activity) {
-                return false;
+        public PermissionHandler bind(@NonNull Activity activity) {
+            if (this.activity == null) {
+                this.activity = activity;
             }
-            unbind();
-            this.activity = activity;
-            return true;
+
+            return this;
         }
 
 
@@ -243,22 +245,22 @@ public abstract class PermissionHandler<Target> {
         public void unbind() {
             this.activity = null;
         }
+
     }
 
 
     private static class FragmentPermissionHandler extends PermissionHandler<Fragment> {
         private Fragment fragment;
+        private Fragment childRequestFragment;
 
-        public FragmentPermissionHandler(Fragment fragment) {
-            this.fragment = fragment;
+        public void setChildRequestFragment(Fragment childRequestFragment) {
+            this.childRequestFragment = childRequestFragment;
         }
-
 
         @Override
         public void requestPermission(@NonNull String... permissions) {
             requestCode = COMMON_REQUEST_PERMISSION_CODE;
             requestPermission(requestCode, permissions);
-
         }
 
         @Override
@@ -275,9 +277,17 @@ public abstract class PermissionHandler<Target> {
                 return;
             }
             this.requestCode = requestCode;
+
+            Fragment rootFragment = fragment.getParentFragment();
+            if (rootFragment != null) {
+                FragmentPermissionHandler permissionHandler = (FragmentPermissionHandler) PermissionHelper.getInstance().getPermissionHandler(rootFragment);
+                permissionHandler.setChildRequestFragment(fragment);
+                rootFragment.requestPermissions(requestPermissionArray, this.requestCode);
+                return;
+            }
+
             fragment.requestPermissions(requestPermissionArray, this.requestCode);
         }
-
 
         @Override
         public boolean shouldShowRequestPermissionRationale(@NonNull String permission) {
@@ -285,19 +295,27 @@ public abstract class PermissionHandler<Target> {
         }
 
         @Override
-        public boolean bind(Fragment fragment) {
-            if (this.fragment == fragment) {
-                return false;
+        public PermissionHandler bind(Fragment fragment) {
+            if (this.fragment == null) {
+                this.fragment = fragment;
             }
-            unbind();
-            this.fragment = fragment;
-            return true;
+            return this;
         }
 
         @Override
         public void unbind() {
             fragment = null;
+        }
 
+        @Override
+        public void notifyPermissionChange(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+            //嵌套的fragment的权限申请结果由父的fragment分发
+            if (childRequestFragment != null) {
+                childRequestFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                childRequestFragment = null;
+                return;
+            }
+            super.notifyPermissionChange(requestCode, permissions, grantResults);
         }
     }
 
