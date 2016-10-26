@@ -1,6 +1,7 @@
 # Permission-Android6.0
 
 目前在Android 6.0 模拟器上使用成功,支持Activity、Fragment、以及嵌套的Fragment权限请求<p/>
+支持小米手机的请求逻辑（未在小米（6.0系统）手机进行测试）<p/>
 ##写在前面
 1、之前将权限申请的结果回调分为三个方法onGrated(String permission)，onDenied(String permission)，onRationale(String[] permission).但是后面使用的时候发现，这样书写不利于比较复杂的权限申请。官方的onRequestPermissionsResult 这个方法参数很详细了，不需要再去过度封装。<p/>
 2、官方权限申请需要得到补充，补充如下：<p/>
