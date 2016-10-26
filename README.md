@@ -9,7 +9,7 @@
 a.如果用户同意了权限申请，那么下次就不需要再申请，直接返回申请成功请求结果. <p/>
 b.如果用户拒绝且勾选了“不再提示（not ask again）”，返回权限被永久拒绝结果码，以便程序员再次处理。<p/>
 c.Fragment嵌套Fragment，嵌套内部的Fragment权限请求。
-
+3、在小米上，shouldShowRequestPermissionRationale 始终为false 但是并不影响这个库的使用。希望有人测试。。
 ##类的联系
 你只能通过PermissionHelper得到操作句柄，PermissionHelper 是一个单例模型。<p/>
 PermissionHandler和你绑定的类（Acticity,Fragment）是一一对应。
